@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Дворец Культуры им. А. М. Добрынина</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5.0.19/index.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/index.min.css" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          burgundy: { DEFAULT: '#762F42', dark: '#5A2332', light: '#8E3D52' },
+          milk: { DEFAULT: '#F3EEE5', dark: '#E8E1D4', light: '#F9F6F0' },
+          gold: { DEFAULT: '#B69A68', dark: '#9A8154', light: '#C9B085' },
+          ink: { DEFAULT: '#263D59', soft: '#5A6B80', light: '#8A96A6' },
+        },
+        fontFamily: {
+          serif: ['"Playfair Display"', 'Georgia', 'serif'],
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; background: #F3EEE5; color: #263D59; }
+  h1, h2, h3, .font-serif { font-family: 'Playfair Display', serif; }
+  .arch-border { border-image: linear-gradient(90deg, transparent, #B69A68, transparent) 1; }
+  .fade-in { animation: fadeIn 0.5s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .slider-transition { transition: transform 0.6s ease-in-out; }
+  /* Версия для слабовидящих */
+  body.high-contrast { background: #000 !important; color: #fff !important; }
+  body.high-contrast * { background-color: #000 !important; color: #fff !important; border-color: #fff !important; }
+  body.high-contrast a, body.high-contrast button { color: #ffff00 !important; }
+  body.large-text { font-size: 120%; }
+  body.xlarge-text { font-size: 140%; }
+  body.no-images img { display: none !important; }
+  body.no-images .bg-gradient-to-br { background: #F3EEE5 !important; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ==================== ДАННЫЕ ==================== */
+const SLIDES = [
+  { id: 1, title: "Новогодний концерт «Зимняя сказка»", desc: "Большой праздничный концерт с участием всех творческих коллективов Дворца. 25 декабря в 18:00.", btn: "Купить билет", link: "#", accent: "burgundy" },
+  { id: 2, title: "Юбилейный сезон — 60 лет Дворцу", desc: "В 2025 году Дворец Культуры им. А. М. Добрынина отмечает 60-летие. Присоединяйтесь к празднованию.", btn: "Подробнее", link: "#about", accent: "ink" },
+  { id: 3, title: "Открыт набор в творческие коллективы", desc: "Приглашаем детей и взрослых в хоровую, театральную, танцевальную студии и изостудию.", btn: "Коллективы", link: "#collectives", accent: "gold" },
+];
+
+const EVENTS = [
+  { id: "1", day: "15", month: "ДЕК", year: "2025", title: "Новогодний концерт хоровой студии", description: "Праздничная программа с участием детских и взрослых коллективов.", category: "Концерт", time: "18:00", place: "Большой зал", age: "6+", price: "300 ₽", poster: "concert1" },
+  { id: "2", day: "20", month: "ДЕК", year: "2025", title: "Спектакль «Щелкунчик»", description: "Театральная студия «Маска» представляет классическую постановку.", category: "Театр", time: "19:00", place: "Малый зал", age: "6+", price: "400 ₽", poster: "theater1" },
+  { id: "3", day: "25", month: "ДЕК", year: "2025", title: "Мастер-класс по народному танцу", description: "Открытое занятие для всех желающих. Вход свободный.", category: "Мастер-класс", time: "12:00", place: "Репетиционный зал", age: "12+", price: "Бесплатно", poster: "master1" },
+  { id: "4", day: "10", month: "ЯНВ", year: "2026", title: "Рождественский вечер органной музыки", description: "Классические произведения в исполнении приглашённых музыкантов.", category: "Концерт", time: "18:30", place: "Большой зал", age: "12+", price: "500 ₽", poster: "concert2" },
+  { id: "5", day: "18", month: "ЯНВ", year: "2026", title: "Выставка детского рисунка «Палитра»", description: "Работы воспитанников изостудии «Палитра».", category: "Выставка", time: "10:00", place: "Фойе", age: "0+", price: "Бесплатно", poster: "exhibit1" },
+  { id: "6", day: "25", month: "ЯНВ", year: "2026", title: "Спектакль «Три сестры»", description: "Совместная постановка театральной студии и приглашённого режиссёра.", category: "Театр", time: "19:00", place: "Малый зал", age: "16+", price: "450 ₽", poster: "theater2" },
+];
+
+const COLLECTIVES = [
+  { id: "1", name: "Хоровая студия «Гармония»", category: "Творческий коллектив", direction: "Вокал", leader: "Иванова Мария Петровна", age: "7+", description: "Академическое и народное пение, выступления на городских площадках.", schedule: "Вт, Чт · 17:00", place: "Каб. 204", status: "Идёт набор" },
+  { id: "2", name: "Театральная студия «Маска»", category: "Творческий коллектив", direction: "Театр", leader: "Соколов Андрей Викторович", age: "12+", description: "Актёрское мастерство, сценическая речь, постановки классических пьес.", schedule: "Ср, Пт · 18:00", place: "Малый зал", status: "Идёт набор" },
+  { id: "3", name: "Ансамбль танца «Русь»", category: "Творческий коллектив", direction: "Хореография", leader: "Петрова Елена Сергеевна", age: "6+", description: "Народные и современные танцы, участие в конкурсах и фестивалях.", schedule: "Пн, Сб · 16:00", place: "Хореографический зал", status: "Идёт набор" },
+  { id: "4", name: "Изостудия «Палитра»", category: "Творческий коллектив", direction: "Декоративно-прикладное творчество", leader: "Кузнецова Ольга Николаевна", age: "5+", description: "Живопись, графика, композиция. Подготовка к художественным конкурсам.", schedule: "Вт, Сб · 15:00", place: "Каб. 301", status: "Идёт набор" },
+  { id: "5", name: "Вокальная студия «Голос»", category: "Творческий коллектив", direction: "Вокал", leader: "Смирнова Анна Игоревна", age: "10+", description: "Эстрадный вокал, работа с микрофоном, сценическое движение.", schedule: "Пн, Ср · 17:30", place: "Каб. 205", status: "Набор закрыт" },
+  { id: "6", name: "Клуб «Мастерская»", category: "Клуб по интересам", direction: "Декоративно-прикладное творчество", leader: "Волкова Татьяна Михайловна", age: "14+", description: "Декоративно-прикладное творчество, керамика, работа с деревом.", schedule: "Чт · 18:00", place: "Каб. 102", status: "Идёт набор" },
+  { id: "7", name: "Клуб лоскутного шитья «Лоскуток»", category: "Клуб по интересам", direction: "Рукоделие", leader: "Новикова Светлана Юрьевна", age: "18+", description: "Техники лоскутного шитья, создание авторских работ.", schedule: "Сб · 14:00", place: "Каб. 103", status: "Идёт набор" },
+  { id: "8", name: "Клуб вязания «Тёплые петли»", category: "Клуб по интересам", direction: "Рукоделие", leader: "Фёдорова Людмила Александровна", age: "18+", description: "Вязание спицами и крючком, обмен опытом, совместные проекты.", schedule: "Вт · 17:00", place: "Каб. 103", status: "Идёт набор" },
+];
+
+const SERVICES = [
+  { id: "1", name: "Большой концертный зал", capacity: "450 мест", area: "380 м²", description: "Основная сцена Дворца. Подходит для концертов, спектаклей, торжественных мероприятий.", features: ["Профессиональный звук", "Световое оборудование", "Гримёрные комнаты", "Кондиционирование"] },
+  { id: "2", name: "Малый зал", capacity: "120 мест", area: "95 м²", description: "Камерный зал для спектаклей, лекций, мастер-классов.", features: ["Проектор и экран", "Звуковое оборудование", "Трансформируемые кресла"] },
+  { id: "3", name: "Хореографический зал", capacity: "до 30 человек", area: "80 м²", description: "Специализированное покрытие, зеркала, балетные станки.", features: ["Профессиональное покрытие", "Зеркальная стена", "Музыкальный центр"] },
+  { id: "4", name: "Репетиционный зал", capacity: "до 20 человек", area: "50 м²", description: "Универсальное помещение для репетиций и занятий.", features: ["Рояль", "Зеркала", "Звукоизоляция"] },
+];
+
+const OFFICIAL_SECTIONS = [
+  { id: "info", title: "Сведения об учреждении", icon: "🏛" },
+  { id: "docs", title: "Документы", icon: "📄" },
+  { id: "finance", title: "Финансово-хозяйственная деятельность", icon: "💰" },
+  { id: "nok", title: "Независимая оценка качества", icon: "⭐" },
+  { id: "corruption", title: "Противодействие коррупции", icon: "⚖️" },
+  { id: "vacancies", title: "Вакансии", icon: "💼" },
+  { id: "access", title: "Доступная среда", icon: "♿" },
+  { id: "reports", title: "Отчётность", icon: "📊" },
+  { id: "paid", title: "Платные услуги", icon: "💳" },
+];
+
+const STAFF = [
+  { name: "Добрынин Алексей Михайлович", position: "Директор", phone: "+7 (000) 000-00-01" },
+  { name: "Иванова Мария Петровна", position: "Заместитель директора по творческой работе", phone: "+7 (000) 000-00-02" },
+  { name: "Соколов Андрей Викторович", position: "Заместитель директора по административно-хозяйственной части", phone: "+7 (000) 000-00-03" },
+  { name: "Петрова Елена Сергеевна", position: "Главный бухгалтер", phone: "+7 (000) 000-00-04" },
+  { name: "Кузнецова Ольга Николаевна", position: "Начальник организационного отдела", phone: "+7 (000) 000-00-05" },
+];
+
+/* ==================== ИКОНКИ ==================== */
+const Icon = ({ path, size = 20, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {path}
+  </svg>
+);
+const IconEye = (p) => <Icon {...p} path={<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>} />;
+const IconMenu = (p) => <Icon {...p} path={<><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>} />;
+const IconX = (p) => <Icon {...p} path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} />;
+const IconChevron = ({dir="right", ...p}) => <Icon {...p} path={dir==="right" ? <polyline points="9 18 15 12 9 6"/> : dir==="left" ? <polyline points="15 18 9 12 15 6"/> : <polyline points="6 9 12 15 18 9"/>} />;
+const IconMap = (p) => <Icon {...p} path={<><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>} />;
+const IconPhone = (p) => <Icon {...p} path={<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>} />;
+const IconMail = (p) => <Icon {...p} path={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>} />;
+const IconClock = (p) => <Icon {...p} path={<><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} />;
+const IconTicket = (p) => <Icon {...p} path={<><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></>} />;
+const IconUsers = (p) => <Icon {...p} path={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />;
+const IconSearch = (p) => <Icon {...p} path={<><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>} />;
+const IconDownload = (p) => <Icon {...p} path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>} />;
+
+/* ==================== ПОСТЕРЫ (SVG-заглушки) ==================== */
+const Poster = ({ type, className = "" }) => {
+  const colors = {
+    concert1: { bg: "#762F42", accent: "#B69A68", icon: "🎵" },
+    concert2: { bg: "#263D59", accent: "#B69A68", icon: "🎼" },
+    theater1: { bg: "#5A2332", accent: "#F3EEE5", icon: "🎭" },
+    theater2: { bg: "#263D59", accent: "#B69A68", icon: "🎭" },
+    master1: { bg: "#B69A68", accent: "#263D59", icon: "✨" },
+    exhibit1: { bg: "#8E3D52", accent: "#F3EEE5", icon: "🎨" },
+  };
+  const c = colors[type] || colors.concert1;
+  return (
+    <div className={`relative overflow-hidden ${className}`} style={{background: c.bg}}>
+      <div className="absolute inset-0 opacity-10" style={{backgroundImage: `repeating-linear-gradient(45deg, ${c.accent} 0, ${c.accent} 1px, transparent 0, transparent 50%)`, backgroundSize: '20px 20px'}}></div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-6xl opacity-80">{c.icon}</span>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 h-1" style={{background: c.accent}}></div>
+    </div>
+  );
+};
+
+/* ==================== ХЛЕБНЫЕ КРОШКИ ==================== */
+const Breadcrumbs = ({ items }) => (
+  <nav className="bg-milk-dark border-b border-gold/20">
+    <div className="max-w-6xl mx-auto px-6 py-3 text-sm text-ink-soft flex flex-wrap items-center gap-2">
+      <a href="#home" className="hover:text-burgundy transition-colors">Главная</a>
+      {items.map((item, i) => (
+        <React.Fragment key={i}>
+          <IconChevron size={14} />
+          <span className={i === items.length - 1 ? "text-ink font-medium" : "hover:text-burgundy transition-colors"}>
+            {item.href ? <a href={item.href}>{item.label}</a> : item.label}
+          </span>
+        </React.Fragment>
+      ))}
+    </div>
+  </nav>
+);
+
+/* ==================== ШАПКА ==================== */
+const Header = ({ currentPage, setCurrentPage, visionMode, setVisionMode }) => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navItems = [
+    { id: "home", label: "Главная" },
+    { id: "about", label: "О Дворце" },
+    { id: "collectives", label: "Коллективы" },
+    { id: "afisha", label: "Афиша" },
+    { id: "services", label: "Услуги и аренда" },
+    { id: "official", label: "Официальная информация" },
+    { id: "contacts", label: "Контакты" },
+  ];
+
+  const toggleVision = () => {
+    const modes = ["normal", "large", "xlarge", "contrast", "noimg"];
+    const idx = modes.indexOf(visionMode);
+    setVisionMode(modes[(idx + 1) % modes.length]);
+  };
+
+  return (
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
+      {/* Верхняя полоса — логотипы и утилиты */}
+      <div className="border-b border-gold/20">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <a href="#home" className="flex items-center gap-4 group">
+            {/* Логотип Департамента */}
+            <div className="w-14 h-14 rounded-full bg-ink flex items-center justify-center text-white text-xs font-bold text-center leading-tight shrink-0">
+              <div>
+                <div className="text-[8px] uppercase tracking-wider">Департамент</div>
+                <div className="text-[8px] uppercase tracking-wider">культуры</div>
+              </div>
+            </div>
+            {/* Логотип Дворца */}
+            <div className="hidden sm:block border-l border-gold pl-4">
+              <div className="text-[10px] uppercase tracking-[0.3em] text-ink-soft mb-0.5">Дворец Культуры</div>
+              <div className="font-serif text-xl font-semibold text-ink leading-tight">им. А. М. Добрынина</div>
+              <div className="text-[10px] text-gold tracking-wider">основан в 1965 году</div>
+            </div>
+          </a>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* ВКонтакте */}
+            <a href="https://vk.com" target="_blank" rel="noopener" className="hidden md:flex items-center gap-2 px-3 py-2 rounded-full bg-ink text-white text-xs font-medium hover:bg-burgundy transition-colors">
+              <span className="font-bold">VK</span>
+              <span>Мы ВКонтакте</span>
+            </a>
+            {/* Версия для слабовидящих */}
+            <button onClick={toggleVision} className="flex items-center gap-2 px-3 py-2 rounded-full border border-ink text-ink text-xs font-medium hover:bg-ink hover:text-white transition-colors" title="Версия для слабовидящих">
+              <IconEye size={16} />
+              <span className="hidden sm:inline">Для слабовидящих</span>
+            </button>
+            {/* Мобильное меню */}
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 text-ink">
+              {mobileOpen ? <IconX /> : <IconMenu />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Навигация */}
+      <nav className="bg-milk">
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Десктоп */}
+          <div className="hidden lg:flex items-center justify-center gap-1 h-14">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id)}
+                className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                  currentPage === item.id ? "text-burgundy" : "text-ink hover:text-burgundy"
+                }`}
+              >
+                {item.label}
+                {currentPage === item.id && <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-burgundy"></span>}
+              </button>
+            ))}
+          </div>
+          {/* Мобильное */}
+          {mobileOpen && (
+            <div className="lg:hidden py-4 space-y-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => { setCurrentPage(item.id); setMobileOpen(false); }}
+                  className={`block w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === item.id ? "bg-burgundy text-white" : "text-ink hover:bg-milk-dark"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </nav>
+    </header>
+  );
+};
+
+/* ==================== ПОДВАЛ ==================== */
+const Footer = ({ setCurrentPage }) => (
+  <footer className="bg-ink text-white mt-20">
+    <div className="max-w-6xl mx-auto px-6 py-12 grid gap-8 md:grid-cols-4">
+      <div className="md:col-span-1">
+        <div className="font-serif text-xl font-semibold mb-3">Дворец Культуры</div>
+        <div className="text-sm text-white/70 leading-relaxed">им. А. М. Добрынина</div>
+        <div className="text-xs text-gold mt-2">Основан в 1965 году</div>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-4 text-gold">Разделы</h4>
+        <ul className="space-y-2 text-sm text-white/80">
+          <li><button onClick={() => setCurrentPage("about")} className="hover:text-gold transition-colors">О Дворце</button></li>
+          <li><button onClick={() => setCurrentPage("collectives")} className="hover:text-gold transition-colors">Коллективы</button></li>
+          <li><button onClick={() => setCurrentPage("afisha")} className="hover:text-gold transition-colors">Афиша</button></li>
+          <li><button onClick={() => setCurrentPage("services")} className="hover:text-gold transition-colors">Услуги и аренда</button></li>
+          <li><button onClick={() => setCurrentPage("official")} className="hover:text-gold transition-colors">Официальная информация</button></li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-4 text-gold">Контакты</h4>
+        <ul className="space-y-2 text-sm text-white/80">
+          <li className="flex items-start gap-2"><IconMap size={14} className="shrink-0 mt-1 text-gold" /> ул. Театральная, 1</li>
+          <li className="flex items-center gap-2"><IconPhone size={14} className="text-gold" /> +7 (000) 000-00-00</li>
+          <li className="flex items-center gap-2"><IconMail size={14} className="text-gold" /> info@dk-dobrynina.ru</li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="font-semibold mb-4 text-gold">Мы в сети</h4>
+        <a href="https://vk.com" target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-sm">
+          <span className="font-bold">VK</span> Официальное сообщество
+        </a>
+        <div className="mt-6 text-xs text-white/50">
+          <button onClick={() => setCurrentPage("official")} className="hover:text-gold transition-colors">Официальная информация →</button>
+        </div>
+      </div>
+    </div>
+    <div className="border-t border-white/10">
+      <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/60">
+        <div>© {new Date().getFullYear()} Дворец Культуры им. А. М. Добрынина</div>
+        <div>Муниципальное учреждение культуры</div>
+      </div>
+    </div>
+  </footer>
+);
+
+/* ==================== ГЛАВНАЯ ==================== */
+const HomePage = ({ setCurrentPage }) => {
+  const [slideIdx, setSlideIdx] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setSlideIdx((i) => (i + 1) % SLIDES.length), 6000);
+    return () => clearInterval(t);
+  }, []);
+
+  const directions = [
+    { icon: "🎭", title: "Организация мероприятий", desc: "Концерты, спектакли, фестивали, торжественные события" },
+    { icon: "🎨", title: "Культурно-досуговая деятельность", desc: "Творческие вечера, выставки, мастер-классы" },
+    { icon: "🎵", title: "Творческие коллективы", desc: "Хоровые, вокальные, театральные, хореографические студии" },
+    { icon: "🏛", title: "Помещения и услуги", desc: "Концертные залы, репетиционные помещения, аренда" },
+  ];
+
+  return (
+    <div className="fade-in">
+      {/* СЛАЙДЕР */}
+      <section className="relative bg-ink overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24 relative">
+          <div className="grid md:grid-cols-2 gap-8 items-center min-h-[320px]">
+            <div className="relative z-10">
+              <div className="inline-block px-3 py-1 rounded-full bg-gold/20 text-gold text-xs uppercase tracking-widest font-medium mb-4">
+                {SLIDES[slideIdx].accent === "burgundy" ? "Анонс" : SLIDES[slideIdx].accent === "gold" ? "Набор" : "Юбилей"}
+              </div>
+              <h1 className="font-serif text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
+                {SLIDES[slideIdx].title}
+              </h1>
+              <p className="text-white/80 text-lg leading-relaxed mb-8">{SLIDES[slideIdx].desc}</p>
+              <a href={SLIDES[slideIdx].link} className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-burgundy text-white font-medium hover:bg-burgundy-light transition-colors">
+                {SLIDES[slideIdx].btn} <IconChevron size={16} />
+              </a>
+            </div>
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-burgundy to-ink">
+              <div className="absolute inset-0 opacity-20" style={{backgroundImage: "repeating-linear-gradient(45deg, #B69A68 0, #B69A68 1px, transparent 0, transparent 30px)"}}></div>
+              <div className="absolute inset-0 flex items-center justify-center text-8xl">
+                {SLIDES[slideIdx].accent === "burgundy" ? "🎵" : SLIDES[slideIdx].accent === "gold" ? "🎨" : "🏛"}
+              </div>
+            </div>
+          </div>
+          {/* Управление слайдером */}
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button onClick={() => setSlideIdx((slideIdx - 1 + SLIDES.length) % SLIDES.length)} className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+              <IconChevron dir="left" size={18} />
+            </button>
+            {SLIDES.map((_, i) => (
+              <button key={i} onClick={() => setSlideIdx(i)} className={`h-2 rounded-full transition-all ${i === slideIdx ? "w-8 bg-gold" : "w-2 bg-white/40"}`}></button>
+            ))}
+            <button onClick={() => setSlideIdx((slideIdx + 1) % SLIDES.length)} className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+              <IconChevron size={18} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* БЛИЖАЙШИЕ МЕРОПРИЯТИЯ */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Что посетить</div>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-ink">Ближайшие мероприятия</h2>
+          </div>
+          <button onClick={() => setCurrentPage("afisha")} className="hidden md:inline-flex items-center gap-2 text-sm font-medium text-burgundy hover:gap-3 transition-all">
+            Вся афиша <IconChevron size={14} />
+          </button>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {EVENTS.slice(0, 3).map((e) => (
+            <article key={e.id} className="group bg-white rounded-2xl border border-gold/20 overflow-hidden hover:border-burgundy/40 hover:shadow-lg transition-all">
+              <Poster type={e.poster} className="aspect-[4/3]" />
+              <div className="p-5">
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-3xl font-serif font-bold text-burgundy">{e.day}</span>
+                  <span className="text-xs uppercase tracking-wider text-ink-soft">{e.month}</span>
+                  <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-milk text-ink-soft">{e.age}</span>
+                </div>
+                <h3 className="font-serif text-lg font-semibold text-ink mb-2 leading-snug">{e.title}</h3>
+                <div className="mt-3 pt-3 border-t border-gold/20 flex items-center justify-between text-xs text-ink-soft">
+                  <span className="flex items-center gap-1"><IconClock size={12} />{e.time}</span>
+                  <span>{e.place}</span>
+                  <span className="font-semibold text-burgundy">{e.price}</span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <button onClick={() => setCurrentPage("afisha")} className="md:hidden mt-6 w-full py-3 rounded-full border border-burgundy text-burgundy font-medium hover:bg-burgundy hover:text-white transition-colors">
+          Смотреть всю афишу
+        </button>
+      </section>
+
+      {/* ТВОРЧЕСКИЕ КОЛЛЕКТИВЫ */}
+      <section className="bg-milk-dark py-16">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Наши объединения</div>
+              <h2 className="font-serif text-3xl md:text-4xl font-bold text-ink">Творческие коллективы и клубы</h2>
+            </div>
+            <button onClick={() => setCurrentPage("collectives")} className="hidden md:inline-flex items-center gap-2 text-sm font-medium text-burgundy hover:gap-3 transition-all">
+              Все коллективы <IconChevron size={14} />
+            </button>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {COLLECTIVES.slice(0, 3).map((c) => (
+              <article key={c.id} className="group p-6 rounded-2xl bg-white border border-gold/20 hover:border-burgundy/40 hover:shadow-lg transition-all">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy">
+                    <IconUsers size={20} />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-milk border border-gold/20 text-xs text-ink-soft">{c.age}</span>
+                </div>
+                <div className="text-xs text-gold uppercase tracking-wider mb-1">{c.direction}</div>
+                <h3 className="font-serif text-lg font-semibold text-ink mb-2 leading-snug">{c.name}</h3>
+                <p className="text-sm text-ink-soft leading-relaxed flex-1">{c.description}</p>
+                <div className="mt-4 pt-4 border-t border-gold/20 text-xs text-ink-soft flex items-center justify-between">
+                  <span>🕐 {c.schedule}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${c.status === "Идёт набор" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{c.status}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ВОЗМОЖНОСТИ ДВОРЦА */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="text-center mb-12">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Направления</div>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-ink">Возможности Дворца</h2>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {directions.map((d, i) => (
+            <div key={i} className="p-6 rounded-2xl bg-white border border-gold/20 hover:border-burgundy/40 hover:shadow-lg transition-all text-center">
+              <div className="text-4xl mb-3">{d.icon}</div>
+              <h3 className="font-serif text-lg font-semibold text-ink mb-2">{d.title}</h3>
+              <p className="text-sm text-ink-soft leading-relaxed">{d.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* МЫ ВКОНТАКТЕ */}
+      <section className="bg-ink py-12">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <div className="text-4xl mb-4">💬</div>
+          <h2 className="font-serif text-2xl md:text-3xl font-bold text-white mb-3">Мы ВКонтакте</h2>
+          <p className="text-white/70 mb-6">Подписывайтесь на наше официальное сообщество — анонсы, фотоотчёты, новости</p>
+          <a href="https://vk.com" target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-ink font-medium hover:bg-gold hover:text-white transition-colors">
+            <span className="font-bold">VK</span> Перейти в сообщество
+          </a>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+/* ==================== О ДВОРЦЕ ==================== */
+const AboutPage = ({ section = "history" }) => {
+  const [tab, setTab] = useState(section);
+  const tabs = [
+    { id: "history", label: "История" },
+    { id: "leadership", label: "Руководство" },
+    { id: "structure", label: "Структура" },
+    { id: "directions", label: "Направления" },
+    { id: "base", label: "Материально-техническая база" },
+  ];
+
+  return (
+    <div className="fade-in">
+      <Breadcrumbs items={[{ label: "О Дворце" }]} />
+      <section className="max-w-6xl mx-auto px-6 py-12">
+        <div className="mb-8">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">О нас</div>
+          <h1 className="font-serif text-4xl md:text-5xl font-bold text-ink">О Дворце Культуры</h1>
+        </div>
+
+        {/* Табы */}
+        <div className="flex flex-wrap gap-2 mb-10 border-b border-gold/20 pb-4">
+          {tabs.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${tab === t.id ? "bg-burgundy text-white" : "bg-white text-ink hover:bg-milk-dark"}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "history" && (
+          <div className="prose max-w-none">
+            <div className="bg-white rounded-2xl border border-gold/20 p-8 mb-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-20 h-20 rounded-full bg-burgundy flex items-center justify-center text-white font-serif text-2xl font-bold">1965</div>
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-gold">Год основания</div>
+                  <div className="font-serif text-2xl font-bold text-ink">Более 60 лет истории</div>
+                </div>
+              </div>
+              <h2 className="font-serif text-2xl font-bold text-ink mb-4">История Дворца</h2>
+              <p className="text-ink-soft leading-relaxed mb-4">Дворец Культуры им. А. М. Добрынина был основан в 1965 году как центр культурной жизни города. С момента открытия Дворец стал местом притяжения для творческих людей всех возрастов.</p>
+              <p className="text-ink-soft leading-relaxed mb-4">В 1970-е годы были открыты первые творческие студии — хоровая и хореографическая, которые существуют до сих пор. В 1980-е Дворец стал одной из главных культурных площадок региона, принимая крупные фестивали и гастроли.</p>
+              <h3 className="font-serif text-xl font-bold text-ink mt-6 mb-3">Основные этапы развития</h3>
+              <ul className="space-y-3 text-ink-soft">
+                <li className="flex gap-4"><span className="font-bold text-burgundy shrink-0">1965</span><span>Открытие Дворца Культуры. Первые творческие коллективы.</span></li>
+                <li className="flex gap-4"><span className="font-bold text-burgundy shrink-0">1975</span><span>Расширение творческих направлений. Открытие театральной студии.</span></li>
+                <li className="flex gap-4"><span className="font-bold text-burgundy shrink-0">1985</span><span>Капитальная реконструкция Большого зала.</span></li>
+                <li className="flex gap-4"><span className="font-bold text-burgundy shrink-0">2000</span><span>Дворцу присвоено имя А. М. Добрынина.</span></li>
+                <li className="flex gap-4"><span className="font-bold text-burgundy shrink-0">2015</span><span>50-летний юбилей. Масштабное обновление материальной базы.</span></li>
+                <li className="flex gap-4"><span className="font-bold text-burgundy shrink-0">2025</span><span>60-летний юбилей. Новые творческие проекты и направления.</span></li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {tab === "leadership" && (
+          <div className="grid gap-6 md:grid-cols-2">
+            {[
+              { name: "Добрынин Алексей Михайлович", pos: "Директор", desc: "Руководит Дворцом с 2010 года. Заслуженный работник культуры." },
+              { name: "Иванова Мария Петровна", pos: "Заместитель директора по творческой работе", desc: "Курирует все творческие коллективы и мероприятия." },
+              { name: "Соколов Андрей Викторович", pos: "Заместитель директора по АХЧ", desc: "Отвечает за материально-техническое обеспечение." },
+              { name: "Петрова Елена Сергеевна", pos: "Главный бухгалтер", desc: "Финансово-хозяйственная деятельность учреждения." },
+            ].map((p, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gold/20 p-6 flex gap-4">
+                <div className="w-20 h-20 rounded-full bg-milk flex items-center justify-center text-3xl shrink-0">👤</div>
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-gold mb-1">{p.pos}</div>
+                  <h3 className="font-serif text-lg font-bold text-ink mb-2">{p.name}</h3>
+                  <p className="text-sm text-ink-soft leading-relaxed">{p.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === "structure" && (
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              { name: "Организационный отдел", desc: "Планирование и проведение мероприятий" },
+              { name: "Творческий отдел", desc: "Координация работы коллективов и студий" },
+              { name: "Административно-хозяйственная часть", desc: "Содержание здания и оборудования" },
+              { name: "Бухгалтерия", desc: "Финансово-хозяйственная деятельность" },
+              { name: "Отдел по работе с посетителями", desc: "Кассы, гардероб, информационное обслуживание" },
+              { name: "Методический кабинет", desc: "Методическая поддержка коллективов" },
+            ].map((s, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gold/20 p-6">
+                <h3 className="font-serif text-lg font-bold text-ink mb-2">{s.name}</h3>
+                <p className="text-sm text-ink-soft">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === "directions" && (
+          <div className="grid gap-6 md:grid-cols-2">
+            {[
+              { icon: "🎭", title: "Культурно-досуговая деятельность", desc: "Организация концертов, спектаклей, выставок, творческих вечеров для всех возрастных категорий." },
+              { icon: "🎪", title: "Организация мероприятий", desc: "Проведение городских, региональных и всероссийских культурных событий." },
+              { icon: "👶", title: "Работа с детьми и молодёжью", desc: "Более 20 творческих коллективов для детей от 5 лет и молодёжи." },
+              { icon: "👴", title: "Работа со старшим поколением", desc: "Клубы по интересам, творческие вечера, университет третьего возраста." },
+              { icon: "🌟", title: "Развитие творческих инициатив", desc: "Поддержка самодеятельных коллективов и авторов." },
+              { icon: "🎓", title: "Образовательные программы", desc: "Мастер-классы, лекции, открытые занятия." },
+            ].map((d, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-gold/20 p-6">
+                <div className="text-4xl mb-3">{d.icon}</div>
+                <h3 className="font-serif text-lg font-bold text-ink mb-2">{d.title}</h3>
+                <p className="text-sm text-ink-soft leading-relaxed">{d.desc}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === "base" && (
+          <div className="grid gap-6 md:grid-cols-2">
+            {SERVICES.map((s) => (
+              <div key={s.id} className="bg-white rounded-2xl border border-gold/20 p-6">
+                <h3 className="font-serif text-xl font-bold text-ink mb-2">{s.name}</h3>
+                <div className="flex gap-4 mb-3 text-sm">
+                  <span className="text-burgundy font-semibold">{s.capacity}</span>
+                  <span className="text-ink-soft">·</span>
+                  <span className="text-ink-soft">{s.area}</span>
+                </div>
+                <p className="text-sm text-ink-soft mb-3">{s.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {s.features.map((f, i) => (
+                    <span key={i} className="px-2 py-1 rounded-full bg-milk text-xs text-ink-soft">{f}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+};
+
+/* ==================== КОЛЛЕКТИВЫ ==================== */
+const CollectivesPage = () => {
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [ageFilter, setAgeFilter] = useState("all");
+
+  const categories = [
+    { id: "all", label: "Все" },
+    { id: "Творческий коллектив", label: "Творческие коллективы" },
+    { id: "Клуб по интересам", label: "Клубы по интересам" },
+  ];
+
+  const directions = [...new Set(COLLECTIVES.map(c => c.direction))];
+
+  const filtered = COLLECTIVES.filter(c => {
+    if (filter !== "all" && c.category !== filter) return false;
+    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (ageFilter !== "all") {
+      const minAge = parseInt(c.age);
+      const target = parseInt(ageFilter);
+      if (minAge > target) return false;
+    }
+    return true;
+  });
+
+  return (
+    <div className="fade-in">
+      <Breadcrumbs items={[{ label: "Коллективы" }]} />
+      <section className="max-w-6xl mx-auto px-6 py-12">
+        <div className="mb-8">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Наши объединения</div>
+          <h1 className="font-serif text-4xl md:text-5xl font-bold text-ink">Коллективы и клубы</h1>
+          <p className="mt-3 text-ink-soft">Творческие студии и клубы по интересам для всех возрастов</p>
+        </div>
+
+        {/* Фильтры */}
+        <div className="bg-white rounded-2xl border border-gold/20 p-4 mb-8 space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {categories.map((c) => (
+              <button key={c.id} onClick={() => setFilter(c.id)} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === c.id ? "bg-burgundy text-white" : "bg-milk text-ink hover:bg-milk-dark"}`}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Поиск по названию..." className="w-full pl-10 pr-4 py-2 rounded-full border border-gold/20 bg-milk focus:outline-none focus:border-burgundy text-sm" />
+            </div>
+            <select value={ageFilter} onChange={(e) => setAgeFilter(e.target.value)} className="px-4 py-2 rounded-full border border-gold/20 bg-milk text-sm focus:outline-none focus:border-burgundy">
+              <option value="all">Любой возраст</option>
+              <option value="5">От 5 лет</option>
+              <option value="7">От 7 лет</option>
+              <option value="12">От 12 лет</option>
+              <option value="14">От 14 лет</option>
+              <option value="18">Взрослые</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((c) => (
+            <article key={c.id} className="bg-white rounded-2xl border border-gold/20 hover:border-burgundy/40 hover:shadow-lg transition-all p-6 flex flex-col">
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${c.category === "Творческий коллектив" ? "bg-burgundy/10 text-burgundy" : "bg-gold/10 text-gold"}`}>
+                  {c.category === "Творческий коллектив" ? <IconUsers size={20} /> : "🎨"}
+                </div>
+                <span className="px-2.5 py-1 rounded-full bg-milk border border-gold/20 text-xs text-ink-soft">{c.age}</span>
+              </div>
+              <div className="text-xs text-gold uppercase tracking-wider mb-1">{c.direction}</div>
+              <h3 className="font-serif text-lg font-semibold text-ink mb-2 leading-snug">{c.name}</h3>
+              <p className="text-sm text-ink-soft leading-relaxed flex-1 mb-3">{c.description}</p>
+              <div className="text-xs text-ink-soft space-y-1 mb-3">
+                <div>👤 Руководитель: <span className="text-ink font-medium">{c.leader}</span></div>
+                <div>🕐 {c.schedule}</div>
+                <div>📍 {c.place}</div>
+              </div>
+              <div className="pt-3 border-t border-gold/20 flex items-center justify-between">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${c.status === "Идёт набор" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{c.status}</span>
+                <span className="text-xs text-ink-soft">{c.category}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+        {filtered.length === 0 && (
+          <div className="text-center py-16 text-ink-soft">По вашему запросу ничего не найдено</div>
+        )}
+      </section>
+    </div>
+  );
+};
+
+/* ==================== АФИША ==================== */
+const AfishaPage = () => {
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const categories = ["all", ...new Set(EVENTS.map(e => e.category))];
+
+  const filtered = categoryFilter === "all" ? EVENTS : EVENTS.filter(e => e.category === categoryFilter);
+
+  return (
+    <div className="fade-in">
+      <Breadcrumbs items={[{ label: "Афиша" }]} />
+      <section className="max-w-6xl mx-auto px-6 py-12">
+        <div className="mb-8">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Расписание</div>
+          <h1 className="font-serif text-4xl md:text-5xl font-bold text-ink">Афиша</h1>
+          <p className="mt-3 text-ink-soft">Все предстоящие мероприятия Дворца Культуры</p>
+        </div>
+
+        {/* Фильтр по категориям */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {categories.map((c) => (
+            <button key={c} onClick={() => setCategoryFilter(c)} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${categoryFilter === c ? "bg-burgundy text-white" : "bg-white text-ink hover:bg-milk-dark border border-gold/20"}`}>
+              {c === "all" ? "Все" : c}
+            </button>
+          ))}
+        </div>
+
+        {/* Хронологический список */}
+        <div className="space-y-4">
+          {filtered.map((e) => (
+            <article key={e.id} className="bg-white rounded-2xl border border-gold/20 hover:border-burgundy/40 hover:shadow-lg transition-all overflow-hidden grid md:grid-cols-[200px_1fr_auto] gap-0">
+              <Poster type={e.poster} className="aspect-[4/3] md:aspect-auto" />
+              <div className="p-6">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-burgundy/10 text-burgundy text-xs font-medium">{e.category}</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-milk text-ink-soft text-xs">{e.age}</span>
+                </div>
+                <div className="flex items-baseline gap-3 mb-2">
+                  <span className="font-serif text-3xl font-bold text-burgundy">{e.day}</span>
+                  <span className="text-sm uppercase tracking-wider text-ink-soft">{e.month} {e.year}</span>
+                  <span className="text-sm text-ink-soft">· {e.time}</span>
+                </div>
+                <h3 className="font-serif text-xl font-semibold text-ink mb-2">{e.title}</h3>
+                <p className="text-sm text-ink-soft leading-relaxed mb-3">{e.description}</p>
+                <div className="flex items-center gap-4 text-xs text-ink-soft">
+                  <span className="flex items-center gap-1"><IconMap size={12} />{e.place}</span>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col items-start justify-between gap-3 border-t md:border-t-0 md:border-l border-gold/20">
+                <div className="text-center md:text-left">
+                  <div className="text-xs text-ink-soft mb-1">Стоимость</div>
+                  <div className="font-serif text-2xl font-bold text-burgundy">{e.price}</div>
+                </div>
+                <a href="#" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-burgundy text-white text-sm font-medium hover:bg-burgundy-light transition-colors">
+                  <IconTicket size={14} /> Купить билет
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+/* ==================== УСЛУГИ И АРЕНДА ==================== */
+const ServicesPage = () => (
+  <div className="fade-in">
+    <Breadcrumbs items={[{ label: "Услуги и аренда" }]} />
+    <section className="max-w-6xl mx-auto px-6 py-12">
+      <div className="mb-8">
+        <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Помещения</div>
+        <h1 className="font-serif text-4xl md:text-5xl font-bold text-ink">Услуги и аренда</h1>
+        <p className="mt-3 text-ink-soft">Справочная информация о помещениях и материально-технической базе Дворца</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {SERVICES.map((s) => (
+          <article key={s.id} className="bg-white rounded-2xl border border-gold/20 overflow-hidden hover:shadow-lg transition-all">
+            <div className="aspect-[16/9] bg-gradient-to-br from-ink to-burgundy relative flex items-center justify-center">
+              <div className="absolute inset-0 opacity-10" style={{backgroundImage: "repeating-linear-gradient(45deg, #B69A68 0, #B69A68 1px, transparent 0, transparent 30px)"}}></div>
+              <div className="text-6xl relative">🏛</div>
+            </div>
+            <div className="p-6">
+              <h3 className="font-serif text-xl font-bold text-ink mb-2">{s.name}</h3>
+              <div className="flex gap-4 mb-3 text-sm">
+                <span className="text-burgundy font-semibold">{s.capacity}</span>
+                <span className="text-ink-soft">·</span>
+                <span className="text-ink-soft">{s.area}</span>
+              </div>
+              <p className="text-sm text-ink-soft leading-relaxed mb-4">{s.description}</p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {s.features.map((f, i) => (
+                  <span key={i} className="px-2 py-1 rounded-full bg-milk text-xs text-ink-soft">{f}</span>
+                ))}
+              </div>
+              <div className="pt-4 border-t border-gold/20 text-xs text-ink-soft italic">
+                Информация об аренде и условиях будет доступна позже
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  </div>
+);
+
+/* ==================== ОФИЦИАЛЬНАЯ ИНФОРМАЦИЯ ==================== */
+const OfficialPage = () => {
+  const [activeSection, setActiveSection] = useState("info");
+
+  const sectionContent = {
+    info: {
+      title: "Сведения об учреждении",
+      content: (
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl border border-gold/20 p-6">
+            <h3 className="font-serif text-xl font-bold text-ink mb-4">Основные сведения</h3>
+            <dl className="space-y-3 text-sm">
+              <div className="grid grid-cols-[180px_1fr] gap-4"><dt className="text-ink-soft">Полное наименование</dt><dd className="text-ink">Муниципальное учреждение культуры «Дворец Культуры им. А. М. Добрынина»</dd></div>
+              <div className="grid grid-cols-[180px_1fr] gap-4"><dt className="text-ink-soft">Сокращённое наименование</dt><dd className="text-ink">МУК «ДК им. А. М. Добрынина»</dd></div>
+              <div className="grid grid-cols-[180px_1fr] gap-4"><dt className="text-ink-soft">Дата создания</dt><dd className="text-ink">1965 год</dd></div>
+              <div className="grid grid-cols-[180px_1fr] gap-4"><dt className="text-ink-soft">Учредитель</dt><dd className="text-ink">Департамент культуры</dd></div>
+              <div className="grid grid-cols-[180px_1fr] gap-4"><dt className="text-ink-soft">Юридический адрес</dt><dd className="text-ink">ул. Театральная, 1</dd></div>
+              <div className="grid grid-cols-[180px_1fr] gap-4"><dt className="text-ink-soft">ИНН / КПП</dt><dd className="text-ink">0000000000 / 000000000</dd></div>
+              <div className="grid grid-cols-[180px_1fr] gap-4"><dt className="text-ink-soft">Режим работы</dt><dd className="text-ink">Пн–Пт: 10:00–20:00, Сб–Вс: 11:00–18:00</dd></div>
+            </dl>
+          </div>
+        </div>
+      ),
+    },
+    docs: {
+      title: "Документы",
+      content: (
+        <div className="space-y-3">
+          {[
+            { name: "Устав учреждения", cat: "Учредительные", date: "15.01.2024", size: "1.2 МБ" },
+            { name: "Лицензия на образовательную деятельность", cat: "Лицензии", date: "03.05.2023", size: "850 КБ" },
+            { name: "Правила внутреннего распорядка", cat: "Локальные акты", date: "20.09.2024", size: "420 КБ" },
+            { name: "Коллективный договор", cat: "Локальные акты", date: "01.02.2024", size: "680 КБ" },
+            { name: "Положение о платных услугах", cat: "Локальные акты", date: "10.06.2024", size: "350 КБ" },
+          ].map((d, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gold/20 p-4 flex items-center gap-4 hover:border-burgundy/40 transition-colors">
+              <div className="w-12 h-12 rounded-lg bg-burgundy/10 flex items-center justify-center text-burgundy shrink-0">📄</div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-ink truncate">{d.name}</div>
+                <div className="text-xs text-ink-soft flex flex-wrap gap-3 mt-1">
+                  <span>📁 {d.cat}</span>
+                  <span>📅 {d.date}</span>
+                  <span>💾 {d.size}</span>
+                </div>
+              </div>
+              <button className="p-2 rounded-full hover:bg-milk text-ink-soft hover:text-burgundy transition-colors" title="Скачать">
+                <IconDownload size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
+      ),
+    },
+    finance: {
+      title: "Финансово-хозяйственная деятельность",
+      content: (
+        <div className="bg-white rounded-2xl border border-gold/20 p-6">
+          <p className="text-ink-soft leading-relaxed mb-4">Информация об объёме финансовой деятельности и поступлении финансовых и материальных средств.</p>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="p-4 rounded-xl bg-milk text-center">
+              <div className="text-xs text-ink-soft mb-1">Объём деятельности</div>
+              <div className="font-serif text-2xl font-bold text-burgundy">—</div>
+            </div>
+            <div className="p-4 rounded-xl bg-milk text-center">
+              <div className="text-xs text-ink-soft mb-1">Поступление средств</div>
+              <div className="font-serif text-2xl font-bold text-burgundy">—</div>
+            </div>
+            <div className="p-4 rounded-xl bg-milk text-center">
+              <div className="text-xs text-ink-soft mb-1">Расходование средств</div>
+              <div className="font-serif text-2xl font-bold text-burgundy">—</div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    nok: {
+      title: "Независимая оценка качества",
+      content: (
+        <div className="bg-white rounded-2xl border border-gold/20 p-6">
+          <p className="text-ink-soft leading-relaxed mb-4">Информация о результатах независимой оценки качества условий оказания услуг.</p>
+          <div className="p-4 rounded-xl bg-milk">
+            <div className="text-sm text-ink-soft">Последняя оценка проведена в <span className="font-semibold text-ink">2024 году</span>.</div>
+          </div>
+        </div>
+      ),
+    },
+    corruption: {
+      title: "Противодействие коррупции",
+      content: (
+        <div className="bg-white rounded-2xl border border-gold/20 p-6 space-y-4">
+          <p className="text-ink-soft leading-relaxed">Информация о противодействии коррупции в учреждении.</p>
+          <ul className="space-y-2 text-sm text-ink">
+            <li className="flex items-start gap-2"><span className="text-burgundy">•</span>План противодействия коррупции</li>
+            <li className="flex items-start gap-2"><span className="text-burgundy">•</span>Комиссия по соблюдению требований к служебному поведению</li>
+            <li className="flex items-start gap-2"><span className="text-burgundy">•</span>Памятки и разъяснения</li>
+          </ul>
+        </div>
+      ),
+    },
+    vacancies: {
+      title: "Вакансии",
+      content: (
+        <div className="bg-white rounded-2xl border border-gold/20 p-6">
+          <p className="text-ink-soft leading-relaxed mb-4">Актуальные вакансии учреждения.</p>
+          <div className="text-center py-8 text-ink-soft">На данный момент вакансий нет</div>
+        </div>
+      ),
+    },
+    access: {
+      title: "Доступная среда",
+      content: (
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl border border-gold/20 p-6">
+            <h3 className="font-serif text-xl font-bold text-ink mb-4">Условия доступности учреждения</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                { icon: "♿", title: "Оборудованные входы", desc: "Пандусы для маломобильных граждан" },
+                { icon: "🚻", title: "Санитарные комнаты", desc: "Специализированные санитарные узлы" },
+                { icon: "🔊", title: "Технические средства", desc: "Слуховые петли, тактильные указатели" },
+                { icon: "👥", title: "Сопровождение", desc: "Возможность посещения с сопровождающим" },
+              ].map((a, i) => (
+                <div key={i} className="p-4 rounded-xl bg-milk">
+                  <div className="text-2xl mb-2">{a.icon}</div>
+                  <div className="font-semibold text-ink mb-1">{a.title}</div>
+                  <div className="text-sm text-ink-soft">{a.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-gold/20 p-6">
+            <h3 className="font-serif text-lg font-bold text-ink mb-3">Контакты для уточнения условий</h3>
+            <p className="text-sm text-ink-soft">Ответственное лицо: <span className="text-ink font-medium">Иванова Мария Петровна</span></p>
+            <p className="text-sm text-ink-soft">Телефон: <span className="text-ink font-medium">+7 (000) 000-00-02</span></p>
+          </div>
+        </div>
+      ),
+    },
+    reports: {
+      title: "Отчётность",
+      content: (
+        <div className="bg-white rounded-2xl border border-gold/20 p-6">
+          <p className="text-ink-soft leading-relaxed">Отчёты о деятельности учреждения и обязательные сведения.</p>
+        </div>
+      ),
+    },
+    paid: {
+      title: "Платные услуги",
+      content: (
+        <div className="bg-white rounded-2xl border border-gold/20 p-6">
+          <p className="text-ink-soft leading-relaxed mb-4">Перечень платных услуг, оказываемых учреждением.</p>
+          <div className="text-sm text-ink-soft italic">Подробная информация доступна в разделе <a href="#services" className="text-burgundy hover:underline">«Услуги и аренда»</a>.</div>
+        </div>
+      ),
+    },
+  };
+
+  return (
+    <div className="fade-in">
+      <Breadcrumbs items={[{ label: "Официальная информация" }]} />
+      <section className="max-w-6xl mx-auto px-6 py-12">
+        <div className="mb-8">
+          <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Обязательные сведения</div>
+          <h1 className="font-serif text-4xl md:text-5xl font-bold text-ink">Официальная информация</h1>
+        </div>
+
+        <div className="grid md:grid-cols-[280px_1fr] gap-8">
+          {/* Навигация */}
+          <nav className="space-y-1">
+            {OFFICIAL_SECTIONS.map((s) => (
+              <button key={s.id} onClick={() => setActiveSection(s.id)} className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors flex items-center gap-3 ${activeSection === s.id ? "bg-burgundy text-white" : "bg-white text-ink hover:bg-milk-dark border border-gold/20"}`}>
+                <span className="text-lg">{s.icon}</span>
+                <span>{s.title}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Контент */}
+          <div>
+            <h2 className="font-serif text-2xl font-bold text-ink mb-6">{sectionContent[activeSection].title}</h2>
+            {sectionContent[activeSection].content}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+/* ==================== КОНТАКТЫ ==================== */
+const ContactsPage = () => (
+  <div className="fade-in">
+    <Breadcrumbs items={[{ label: "Контакты" }]} />
+    <section className="max-w-6xl mx-auto px-6 py-12">
+      <div className="mb-8">
+        <div className="text-xs uppercase tracking-[0.3em] text-gold mb-2">Связаться с нами</div>
+        <h1 className="font-serif text-4xl md:text-5xl font-bold text-ink">Контакты</h1>
+      </div>
+
+      {/* Карта */}
+      <div className="bg-white rounded-2xl border border-gold/20 overflow-hidden mb-8">
+        <div className="aspect-[21/9] bg-gradient-to-br from-ink to-burgundy relative flex items-center justify-center">
+          <div className="absolute inset-0 opacity-20" style={{backgroundImage: "repeating-linear-gradient(0deg, #B69A68 0, #B69A68 1px, transparent 0, transparent 40px), repeating-linear-gradient(90deg, #B69A68 0, #B69A68 1px, transparent 0, transparent 40px)"}}></div>
+          <div className="relative text-center text-white">
+            <IconMap size={48} className="mx-auto mb-3 text-gold" />
+            <div className="font-serif text-2xl font-bold mb-1">Здесь будет Яндекс.Карта</div>
+            <div className="text-sm text-white/70">ул. Театральная, 1</div>
+          </div>
+        </div>
+        <div className="p-4 flex flex-wrap gap-3 justify-center">
+          <a href="#" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-burgundy text-white text-sm font-medium hover:bg-burgundy-light transition-colors">
+            <IconMap size={14} /> Построить маршрут
+          </a>
+        </div>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2">
+        {/* Общие контакты */}
+        <div className="space-y-4">
+          <h2 className="font-serif text-2xl font-bold text-ink mb-4">Общие контакты</h2>
+          {[
+            { icon: <IconMap size={18} />, title: "Адрес", text: "ул. Театральная, 1, г. Пример" },
+            { icon: <IconPhone size={18} />, title: "Телефон", text: "+7 (000) 000-00-00" },
+            { icon: <IconMail size={18} />, title: "Email", text: "info@dk-dobrynina.ru" },
+            { icon: <IconClock size={18} />, title: "Режим работы", text: "Пн–Пт: 10:00–20:00\nСб–Вс: 11:00–18:00" },
+          ].map((c, i) => (
+            <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white border border-gold/20">
+              <div className="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy shrink-0">{c.icon}</div>
+              <div>
+                <div className="text-sm font-medium text-ink mb-1">{c.title}</div>
+                <div className="text-sm text-ink-soft whitespace-pre-line">{c.text}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Касса ЯрШоу */}
+        <div className="bg-gradient-to-br from-ink to-burgundy text-white rounded-2xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-2xl">🎟</div>
+            <div>
+              <div className="text-xs uppercase tracking-wider text-gold">Билетный оператор</div>
+              <div className="font-serif text-xl font-bold">Касса «ЯрШоу»</div>
+            </div>
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center gap-2"><IconPhone size={14} className="text-gold" /> +7 (000) 000-00-10</div>
+            <div className="flex items-center gap-2"><IconClock size={14} className="text-gold" /> Ежедневно 11:00–19:00</div>
+          </div>
+          <a href="#" className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-ink text-sm font-medium hover:bg-gold hover:text-white transition-colors">
+            Сайт «ЯрШоу» <IconChevron size={14} />
+          </a>
+        </div>
+      </div>
+
+      {/* Телефоны сотрудников */}
+      <div className="mt-12">
+        <h2 className="font-serif text-2xl font-bold text-ink mb-6">Телефоны сотрудников и подразделений</h2>
+        <div className="bg-white rounded-2xl border border-gold/20 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-milk-dark">
+              <tr>
+                <th className="text-left px-6 py-3 font-semibold text-ink">Должность</th>
+                <th className="text-left px-6 py-3 font-semibold text-ink">ФИО</th>
+                <th className="text-left px-6 py-3 font-semibold text-ink">Телефон</th>
+              </tr>
+            </thead>
+            <tbody>
+              {STAFF.map((s, i) => (
+                <tr key={i} className="border-t border-gold/20 hover:bg-milk transition-colors">
+                  <td className="px-6 py-3 text-ink-soft">{s.position}</td>
+                  <td className="px-6 py-3 text-ink font-medium">{s.name}</td>
+                  <td className="px-6 py-3 text-burgundy font-semibold">{s.phone}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+);
+
+/* ==================== ГЛАВНОЕ ПРИЛОЖЕНИЕ ==================== */
+const App = () => {
+  const [currentPage, setCurrentPage] = useState("home");
+  const [visionMode, setVisionMode] = useState("normal");
+
+  useEffect(() => {
+    document.body.className = "";
+    if (visionMode === "large") document.body.classList.add("large-text");
+    if (visionMode === "xlarge") document.body.classList.add("xlarge-text");
+    if (visionMode === "contrast") document.body.classList.add("high-contrast");
+    if (visionMode === "noimg") document.body.classList.add("no-images");
+  }, [visionMode]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case "home": return <HomePage setCurrentPage={setCurrentPage} />;
+      case "about": return <AboutPage />;
+      case "collectives": return <CollectivesPage />;
+      case "afisha": return <AfishaPage />;
+      case "services": return <ServicesPage />;
+      case "official": return <OfficialPage />;
+      case "contacts": return <ContactsPage />;
+      default: return <HomePage setCurrentPage={setCurrentPage} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-milk text-ink flex flex-col">
+      <Header currentPage={currentPage} setCurrentPage={setCurrentPage} visionMode={visionMode} setVisionMode={setVisionMode} />
+      <main className="flex-1">{renderPage()}</main>
+      <Footer setCurrentPage={setCurrentPage} />
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
